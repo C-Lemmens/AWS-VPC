@@ -55,9 +55,6 @@ def create_vpc(friendly_name, vpc_cidr, subnet_cidr, access_key_id, secret_acces
         subnet_id = subnet_response['Subnet']['SubnetId']
         ec2_client.create_tags(Resources=[subnet_id], Tags=[{'Key': 'Name', 'Value': f"{friendly_name}-subnet"}])
 
-        # Associate Route Table with Subnet
-        ec2_client.associate_route_table(RouteTableId=route_table_id, SubnetId=subnet_id)
-
         print("VPC and associated resources created successfully.")
     except Exception as e:
         print("An error occurred:", str(e))
@@ -76,30 +73,36 @@ def get_user_choice():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='AWS VPC Creation Script')
+    parser.add_argument('--name', help='Friendly name for the VPC and associated resources')
+    parser.add_argument('--vpc-cidr', help='CIDR block for the VPC')
+    parser.add_argument('--subnet-cidr', help='CIDR block for the subnet')
     args = parser.parse_args()
 
     credentials_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'credentials.yaml')
 
     if os.path.exists(credentials_file):
         access_key_id, secret_access_key, session_token, region = read_credentials(credentials_file)
-        while True:
-            choice = get_user_choice()
-            if choice == '1':
-                session = boto3.Session(
-                    aws_access_key_id=access_key_id,
-                    aws_secret_access_key=secret_access_key,
-                    aws_session_token=session_token,
-                    region_name=region
-                )
-                ec2_client = session.resource('ec2')
-                list_vpcs(ec2_client)
-            elif choice == '2':
-                name = input("Enter the friendly name for the VPC and associated resources: ")
-                vpc_cidr = input("Enter the CIDR block for the VPC (e.g., 10.0.0.0/16): ")
-                subnet_cidr = input("Enter the CIDR block for the subnet (e.g., 10.0.0.0/24): ")
-                create_vpc(name, vpc_cidr, subnet_cidr, access_key_id, secret_access_key, session_token, region)
-            elif choice == '3':
-                print("Script execution terminated.")
-                break
+        if args.name and args.vpc_cidr and args.subnet_cidr:
+            create_vpc(args.name, args.vpc_cidr, args.subnet_cidr, access_key_id, secret_access_key, session_token, region)
+        else:
+            while True:
+                choice = get_user_choice()
+                if choice == '1':
+                    session = boto3.Session(
+                        aws_access_key_id=access_key_id,
+                        aws_secret_access_key=secret_access_key,
+                        aws_session_token=session_token,
+                        region_name=region
+                    )
+                    ec2_client = session.resource('ec2')
+                    list_vpcs(ec2_client)
+                elif choice == '2':
+                    name = input("Enter the friendly name for the VPC and associated resources: ")
+                    vpc_cidr = input("Enter the CIDR block for the VPC (e.g., 10.0.0.0/16): ")
+                    subnet_cidr = input("Enter the CIDR block for the subnet (e.g., 10.0.0.0/24): ")
+                    create_vpc(name, vpc_cidr, subnet_cidr, access_key_id, secret_access_key, session_token, region)
+                elif choice == '3':
+                    print("Script execution terminated.")
+                    break
     else:
         print("Credentials file not found. Please make sure 'credentials.yaml' exists in the script directory.")
