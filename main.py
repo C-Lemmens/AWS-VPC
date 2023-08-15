@@ -3,6 +3,7 @@ import boto3
 import yaml
 import os
 
+
 def read_credentials(file_path):
     with open(file_path, 'r') as file:
         credentials = yaml.safe_load(file)
@@ -12,12 +13,14 @@ def read_credentials(file_path):
         region = credentials['region']
     return access_key_id, secret_access_key, session_token, region
 
+
 def list_vpcs(ec2_client):
     print("Existing VPCs:")
     vpcs = list(ec2_client.vpcs.all())
     for i, vpc in enumerate(vpcs, 1):
         print(f"{i}. VPC ID: {vpc.id}, CIDR Block: {vpc.cidr_block}")
     print()
+
 
 def create_vpc(friendly_name, vpc_cidr, subnet_cidr, access_key_id, secret_access_key, session_token, region):
     try:
@@ -59,6 +62,7 @@ def create_vpc(friendly_name, vpc_cidr, subnet_cidr, access_key_id, secret_acces
     except Exception as e:
         print("An error occurred:", str(e))
 
+
 def get_user_choice():
     print("Choose an option:")
     print("1. List existing VPCs")
@@ -70,6 +74,7 @@ def get_user_choice():
         if choice in ['1', '2', '3']:
             return choice
         print("Invalid choice. Please try again.")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='AWS VPC Creation Script')
